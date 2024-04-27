@@ -30,9 +30,16 @@ public:
     int NoOfNeighbors(){
         return edges.size();
     }
-    Node* getNeighbor(int i=0){
+    Node* getNeighbor(int i){
         return edges[i].first;
 
+    }
+    vector<Node*> getNeighbor(){
+        vector<Node*> r;
+        for(int i=0; i<edges.size(); i++){
+            r.push_back(edges[i].first);
+        }
+        return r;
     }
 };
 
@@ -84,10 +91,12 @@ public:
 
 class Algorithm {
 public:
-    vector<bool> vis;
+    vector<bool> vis;   
     int totalNodes;
-    Algorithm(int totalNodes){
-        this->totalNodes = totalNodes;
+    Graph& graph;  // Reference to the Graph object
+    
+    Algorithm(Graph& graph) : graph(graph) {
+        totalNodes =graph.TotalNodes();
         for(int i=0; i<totalNodes; i++){
             vis.push_back(false);
         }
@@ -106,7 +115,7 @@ class DFS : public Algorithm {
     }
 
 public:
-    DFS(int totalNodes) : Algorithm(totalNodes){    
+    DFS(Graph &graph) : Algorithm(graph){    
         
     }
 
@@ -119,6 +128,8 @@ public:
     }
     
     bool search_by_dfs(Node* startNode, int s){
+        //reset the visited vector
+
         // impement dfs
         bool res = DFS_implementation_forSearch(startNode, s);
 
@@ -194,7 +205,7 @@ class BFS : public Algorithm {
     }
 
 public:
-    BFS(int totalNodes) : Algorithm(totalNodes){
+    BFS(Graph &graph) : Algorithm(graph){
        
     }
 
@@ -249,6 +260,36 @@ public:
 
         return true;
     }
+
+    int shortestUnweightedPathBFS(Node* startNode, Node* endNode = nullptr) {
+        queue<Node*> q;
+        vector<int> distance(this->totalNodes, -1); // Initialize distances to -1 (unvisited)
+        
+        q.push(startNode);
+        distance[startNode->getId()] = 0; // Distance to startNode is 0
+
+        while (!q.empty()) {
+            Node* curr = q.front();
+            q.pop();
+
+            for (Node* neighbor : curr->getNeighbor()) {
+                if (distance[neighbor->getId()] == -1) { // If neighbor is not visited
+                    q.push(neighbor);
+                    distance[neighbor->getId()] = distance[curr->getId()] + 1; // Update distance
+                    if(endNode == neighbor){
+                        return distance[neighbor->getId()];
+                    }
+                }
+            }
+        }
+
+        // Print shortest path distances from startNode to all nodes
+        cout << "Shortest path distances from node " << startNode->getId() << ":\n";
+        for (size_t i = 0; i < this->totalNodes; ++i) {
+            cout << "Node " << i << ": " << distance[i] << " edges away\n";
+        }
+        return -1;
+    }
 };
 
 class Dijkstra : public Algorithm {
@@ -293,7 +334,7 @@ int main() {
 
 
     
-    DFS dfs(totalNodes);
+    DFS dfs(graph);
     dfs.execute(graph.getNodes()[0]);
     dfs.execute(graph.getNodes()[1]);
     bool find5 = dfs.search_by_dfs(graph.getNodes()[0], 5);
@@ -301,13 +342,33 @@ int main() {
     cout<<dfs.no_of_paths_to(graph.getNodes()[0], graph.getNodes()[3])<<endl;
     
 
-    BFS bfs(totalNodes);
+    BFS bfs(graph);
     bfs.execute(graph.getNodes()[0]);
     bool find3 = bfs.search_by_bfs(graph.getNodes()[6], 3);
     cout<<find3<<endl;
+    int sp0 = bfs.shortestUnweightedPathBFS(graph.getNodes()[0]);
+    cout<<sp0<<endl;
+    int sp1to4 = bfs.shortestUnweightedPathBFS(graph.getNodes()[1], graph.getNodes()[4]);
+    cout<<"shortest distance form node 1 to 4: "<<sp1to4<<" edges"<<endl;
     
     // Dijkstra dijkstra;
     // dijkstra.execute(graph, graph.getNodes()[0]);
 
     return 0;
 }
+
+
+
+
+//      ______                                                            ______
+//     | Node |                                                          | Edge |
+//     |______|                                                          |______|  
+//                                                                            
+//                     _______
+//                    | Graph |           
+//                    |_______|           ___________
+//                                       | Algorithm |
+//                                       |___________|
+//                                             |
+//                                             |
+//                                       All Algorithms         
