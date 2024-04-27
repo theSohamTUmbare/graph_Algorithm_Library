@@ -1,5 +1,4 @@
 #include<iostream>
-using namespace std;
 #include <vector>
 #include <queue>
 #include <limits>
@@ -300,6 +299,62 @@ public:
     
 };
 
+class DetectCycle: public Algorithm {
+    Node* parentNode = nullptr;
+    void resetVisited(){
+        for(int i=0; i<this->totalNodes; i++){
+            vis[i] = false;
+        }
+    }
+
+public:
+    DetectCycle(Graph &graph) : Algorithm(graph){
+       
+    }
+
+    void execute(Node* startNode = nullptr) override {
+        if (startNode == nullptr) {
+            if (!graph.getNodes().empty()) {
+                startNode = graph.getNodes()[0]; // Default to the first node in the graph
+            } else {
+                std::cerr << "Graph is empty! Unable to execute DetectCycle algorithm.\n";
+                return;
+            }
+        }
+        if(is_cyclic()){
+            cout<<"Yes this graph is Cyclic!\n";
+            return;
+        }else{
+            cout<<"This graph is not cyclic!\n";
+        }
+    }
+    bool is_cyclic(Node* startNode = nullptr){
+        if (startNode == nullptr) {
+            if (!graph.getNodes().empty()) {
+                startNode = graph.getNodes()[0]; // Default to the first node in the graph
+            } else {
+                std::cerr << "Graph is empty! Unable to execute DetectCycle algorithm.\n";
+                return false;
+            }
+        }
+
+        vis[startNode->getId()] = true;
+
+        for (Node* neighbor : startNode->getNeighbor()) {
+            if(vis[neighbor->getId()] && neighbor != parentNode){
+                return true;
+            }else if(!vis[neighbor->getId()]){
+                parentNode = startNode;
+                if(is_cyclic(neighbor)){
+                    return true;
+                }
+            }
+        }
+        resetVisited();
+        return false;
+    }
+};
+
 int main() {
     // Usage example
     Graph graph;
@@ -354,6 +409,9 @@ int main() {
     // Dijkstra dijkstra;
     // dijkstra.execute(graph, graph.getNodes()[0]);
 
+    DetectCycle ds(graph);
+    ds.execute(graph.getNodes()[0]);
+    cout<<ds.is_cyclic()<<endl;
     return 0;
 }
 
